@@ -2,6 +2,7 @@ package com.xdatasystem.contactsimporter;
 
 import java.io.IOException;
 import java.util.List;
+import org.apache.http.HttpException;
 
 /**
  * Interface to the retrieval of contacts lists.
@@ -12,5 +13,5 @@ import java.util.List;
  */
 public interface ContactListImporter {
 
-	public abstract List<Contact> getContactList() throws IOException, ContactListImporterException;;
+	public abstract List<Contact> getContactList() throws ContactListImporterException;
 }

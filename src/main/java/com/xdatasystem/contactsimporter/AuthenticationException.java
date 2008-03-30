@@ -2,11 +2,11 @@ package com.xdatasystem.contactsimporter;
 
 public class AuthenticationException extends ContactListImporterException {
 	
-	AuthenticationException(String message) {
+	public AuthenticationException(String message) {
 		super(message);
 	}
 	
-	AuthenticationException(String message, Throwable t) {
+	public AuthenticationException(String message, Throwable t) {
 		super(message, t);
 	}
 }
