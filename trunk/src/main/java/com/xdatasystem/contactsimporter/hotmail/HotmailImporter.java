@@ -4,26 +4,24 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpException;
-import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.*;
-import org.apache.http.cookie.*;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.ExecutionContext;
 import com.xdatasystem.contactsimporter.*;
 import java.util.logging.Logger;
 import java.util.regex.*;
 
+/**
+ * Implementation of ContactListImporter that retrieves contacts
+ * from microsoft's hotmail service.
+ * 
+ * @author Tjerk Wolterink
+ */
 public class HotmailImporter extends ContactListImporterImpl {
 	private final static String PWDPAD="IfYouAreReadingThisYouHaveTooMuchFreeTime";
 	private static Logger log=Logger.getLogger(HotmailImporter.class.getPackage().getName());
@@ -31,22 +29,6 @@ public class HotmailImporter extends ContactListImporterImpl {
 	public HotmailImporter(String username, String password) {
 		super(username, password);
 	}
-/*
-	@Override
-	
-		} catch(IOException e) {
-			throw new ContactListImporterException("IOException occured", e);
-			
-		} catch(URISyntaxException e) {
-			throw new ContactListImporterException("URISyntaxException occured", e);
-			
-		} catch(InterruptedException e) {
-			throw new ContactListImporterException("InterruptedException occured", e);
-			
-		} catch(HttpException e) {
-			throw new ContactListImporterException("HttpException occured", e);
-		}
-	}*/
 
 	@Override
 	public String getLoginURL() {
@@ -139,7 +121,9 @@ public class HotmailImporter extends ContactListImporterImpl {
 				if(email.charAt(0)=='"') {
 					email=email.substring(1, email.length()-1);
 				}
-				contacts.add(new Contact("Unkown", email));
+				String name=values[1]+" "+values[2]+" "+values[3];
+				if(name.length()==2) name=email;
+				contacts.add(new Contact(name, email));
 			}
 			i++;
 		}

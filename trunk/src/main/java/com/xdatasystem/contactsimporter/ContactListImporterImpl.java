@@ -25,6 +25,13 @@ import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HTTP;
 
+/**
+ * Abstract, general implementation of ContactListImporter.
+ * It provides usefull methods when importing contacts from a service.
+ * Subclass this class to implement a service specific contactsimporter.
+ * 
+ * @author Tjerk Wolterink
+ */
 public abstract class ContactListImporterImpl implements ContactListImporter {
 	private String username;
 	private String password;
@@ -48,7 +55,6 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	public List<Contact> getContactList() throws ContactListImporterException {
 
 		//System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
-		//System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
 		//System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "debug");
 		
 		try {
@@ -56,7 +62,10 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 			DefaultHttpClient client=this.getHttpClient();
 			login(client);
 			
-	   	String host=((HttpHost)client.getDefaultContext().getAttribute(ExecutionContext.HTTP_TARGET_HOST)).getHostName();
+	   	String host=((HttpHost)client.getDefaultContext().getAttribute(
+	   		ExecutionContext.HTTP_TARGET_HOST)
+	   	).getHostName();
+	   	
 			String listUrl=String.format(getContactListURL(), host);
 	    return parseContacts(this.doGet(client, listUrl, null));
 	    
@@ -91,6 +100,11 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	 */
 	protected abstract List<Contact> parseContacts(InputStream contactsContent) throws IOException;
 
+	
+	/**
+	 * Gets a default HttpClient that mimics the beviour of Firefox 2.
+	 * Redirects are followed automatically.
+	 */
 	protected DefaultHttpClient getHttpClient() {
 		DefaultHttpClient client=new DefaultHttpClient();
 		client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
@@ -113,7 +127,17 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	  }
 	}
 	
-	protected InputStream doGet(HttpClient client, String url, String referer) throws ContactListImporterException, URISyntaxException, InterruptedException, HttpException, IOException {
+	/**
+	 * Performs a http GET operation
+	 * 
+	 * @param client the client performing the request
+	 * @param url the url to retrieve
+	 * @param referer a possibly needed ref url, or null otherwise
+	 * @return the InputStream that contains the content
+	 */
+	protected InputStream doGet(HttpClient client, String url, String referer)
+		throws ContactListImporterException, URISyntaxException, InterruptedException, HttpException, IOException
+	{
 		
 		HttpGet get=new HttpGet(url);
 		setHeaders(get, referer);
@@ -126,7 +150,17 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
     return resp.getEntity().getContent();
 	}
 
-	protected InputStream doPost(HttpClient client, String url, NameValuePair[] data, String referer) throws ContactListImporterException, HttpException, IOException, InterruptedException, URISyntaxException {
+	/**
+	 * Performs a http POST operation
+	 * 
+	 * @param client the client performing the request
+	 * @param url the url to retrieve
+	 * @param referer a possibly needed ref url, or null otherwise
+	 * @return the InputStream that contains the content
+	 */
+	protected InputStream doPost(HttpClient client, String url, NameValuePair[] data, String referer)
+		throws ContactListImporterException, HttpException, IOException, InterruptedException, URISyntaxException
+	{
 		
 		HttpPost post=new HttpPost(url);
 		setHeaders(post, referer);
