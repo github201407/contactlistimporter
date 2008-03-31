@@ -147,9 +147,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 		
 		HttpGet get=new HttpGet(url);
 		setHeaders(get, referer);
-    System.out.println("Client requesting: "+url);
     HttpResponse resp=client.execute(get, client.getDefaultContext());
-    System.out.println("Get Status: "+resp.getStatusLine());
     //if (statusCode!=resp.get) {
     //	throw new ContactListImporterException("Page GET request failed NOK: "+get.getStatusLine());
     //}
@@ -175,11 +173,6 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 		HttpProtocolParams.setUseExpectContinue(client.getParams(), false);
 		HttpProtocolParams.setUseExpectContinue(post.getParams(), false);
    	HttpResponse resp=client.execute(post, client.getDefaultContext());
-   	System.out.println(resp.getParams().toString());
-   
-   	System.out.println("PostStatus: "+resp.getStatusLine());
-   	
-
    	
     //if (statusCode!=HttpStatus.SC_OK) {
     //	throw new ContactListImporterException("Page GET request failed NOK: "+post.getStatusLine());

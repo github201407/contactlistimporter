@@ -56,7 +56,6 @@ public class HotmailImporter extends ContactListImporterImpl {
 		BasicClientCookie cookie=new BasicClientCookie("CkTst", "G"+System.currentTimeMillis());
 		cookie.setDomain("login.live.com");
 		cookie.setPath("/ppsecure/");
-		System.out.println(cookie.getValue());
 		client.getCookieStore().addCookie(cookie);
 		
 		// stupid microsoft security haha
@@ -82,7 +81,6 @@ public class HotmailImporter extends ContactListImporterImpl {
     }	
     
     String redirectLocation=getJSRedirectLocation(content);
-    System.out.println(redirectLocation);
     this.doGet(client, redirectLocation, formUrl);
 	}
 

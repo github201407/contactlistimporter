@@ -101,8 +101,6 @@ public class GmailImporter extends ContactListImporterImpl {
 			json.indexOf(endTag)
 		);
 		
-		System.out.println(json);
-		
 		JSONTokener jsonTokener=new JSONTokener(json);
 		Object o=jsonTokener.nextValue();
 		if(o==null || !(o instanceof JSONObject)) {
