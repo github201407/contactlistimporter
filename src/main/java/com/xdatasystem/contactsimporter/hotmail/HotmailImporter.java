@@ -24,7 +24,6 @@ import java.util.regex.*;
  */
 public class HotmailImporter extends ContactListImporterImpl {
 	private final static String PWDPAD="IfYouAreReadingThisYouHaveTooMuchFreeTime";
-	private static Logger log=Logger.getLogger(HotmailImporter.class.getPackage().getName());
 	
 	public HotmailImporter(String username, String password) {
 		super(username, password);
@@ -43,7 +42,7 @@ public class HotmailImporter extends ContactListImporterImpl {
 	@Override
 	protected void login(DefaultHttpClient client) throws ContactListImporterException, IOException, URISyntaxException, InterruptedException, HttpException {
 		String loginPageUrl=getLoginURL().toString();
-		log.info("Requesting login page");
+		getLogger().info("Requesting login page");
 		String content=this.readInputStream(
 			this.doGet(client, loginPageUrl, null)
 		);
@@ -72,16 +71,15 @@ public class HotmailImporter extends ContactListImporterImpl {
 			new BasicNameValuePair("PPFT", ppft)
 		};
 		
-		log.info("Performing login");
+		getLogger().info("Performing login");
 		content=this.readInputStream(
 			this.doPost(client, formUrl, data, loginPageUrl)
 		);
 		
     if(content.contains("password is incorrect")) {
-    	log.info("Login failed");
+    	getLogger().info("Login failed");
 	    throw new AuthenticationException("Username and password do not match");
     }	
-    log.info("Login succesfull");
     
     String redirectLocation=getJSRedirectLocation(content);
     System.out.println(redirectLocation);
@@ -112,16 +110,14 @@ public class HotmailImporter extends ContactListImporterImpl {
 			if(i>1) {
 				String[] values=line.split(";");
 				if(values.length<47) continue;
-				for(int j=0;j<values.length;j++) {
-					System.out.println(j+":"+values[j]);
-				}
-				String email=values[46];
+				String email=parseValue(values[46]);
 				if(email.length()==0) continue;
-				// chop off quotes
-				if(email.charAt(0)=='"') {
-					email=email.substring(1, email.length()-1);
-				}
-				String name=values[1]+" "+values[2]+" "+values[3];
+				
+				String name=parseValue(values[1]);
+				if(values[2].length()>0)
+					name+=" "+parseValue(values[2]);
+				if(values[3].length()>0)
+					name+=" "+parseValue(values[3]);
 				if(name.length()==2) name=email;
 				contacts.add(new Contact(name, email));
 			}
@@ -130,6 +126,14 @@ public class HotmailImporter extends ContactListImporterImpl {
 		return contacts;
 	}
 	
+	private String parseValue(String value) {
+		// chop off quotes
+		if(value.length()>0 && value.charAt(0)=='"') {
+			value=value.substring(1, value.length()-1);
+		}
+		return value;
+	}
+
 	private String getInputValue(String name, String content) throws ContactListImporterException {
 		Pattern p=Pattern.compile("^.+value=\"([^\\s\"]+)\"");
 		int index=content.indexOf(name)+name.length()+2;
@@ -155,5 +159,13 @@ public class HotmailImporter extends ContactListImporterImpl {
 	
 	private void throwProtocolChanged() throws ContactListImporterException {
 		throw new ContactListImporterException("Microsoft hotmail changed it's protocol, cannot import contactslist");
+	}
+
+	public static boolean isHotmail(String email) {
+		String[] domains={
+			"hotmail.com",
+			"live.com"
+		};
+		return ContactListImporterImpl.isConformingEmail(email, domains);
 	}
 }
