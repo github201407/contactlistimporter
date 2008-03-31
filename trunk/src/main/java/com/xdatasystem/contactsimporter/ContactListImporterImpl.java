@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import org.apache.http.client.HttpClient;
 import org.apache.http.*;
 import org.apache.http.client.methods.*;
@@ -24,6 +25,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HTTP;
+import com.xdatasystem.contactsimporter.hotmail.HotmailImporter;
 
 /**
  * Abstract, general implementation of ContactListImporter.
@@ -35,17 +37,23 @@ import org.apache.http.protocol.HTTP;
 public abstract class ContactListImporterImpl implements ContactListImporter {
 	private String username;
 	private String password;
+	private static Logger log=Logger.getLogger(HotmailImporter.class.getPackage().getName());
+	
 
 	public ContactListImporterImpl(String username, String password) {
 		this.username=username;
 		this.password=password;
 	}
 	
-	protected String getUsername() {
+	protected Logger getLogger() {
+		return log;
+	}
+	
+	public String getUsername() {
 		return username;
 	}
 	
-	protected String getPassword() {
+	public String getPassword() {
 		return password;
 	}
 	
@@ -60,26 +68,23 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 		try {
 			
 			DefaultHttpClient client=this.getHttpClient();
+			log.info("Performing login");
 			login(client);
+			log.info("Login succeeded");
 			
 	   	String host=((HttpHost)client.getDefaultContext().getAttribute(
 	   		ExecutionContext.HTTP_TARGET_HOST)
 	   	).getHostName();
 	   	
 			String listUrl=String.format(getContactListURL(), host);
+			
+			log.info("Retrieving contactlist");
+			InputStream input=this.doGet(client, listUrl, null);
+			log.info("Parsing contactlist");
 	    return parseContacts(this.doGet(client, listUrl, null));
 	    
-		} catch(IOException e) {
-			throw new ContactListImporterException("IOException occured", e);
-			
-		} catch(URISyntaxException e) {
-			throw new ContactListImporterException("URISyntaxException occured", e);
-			
-		} catch(InterruptedException e) {
-			throw new ContactListImporterException("InterruptedException occured", e);
-			
-		} catch(HttpException e) {
-			throw new ContactListImporterException("HttpException occured", e);
+		} catch(Exception e) {
+			throw new ContactListImporterException("Exception occured", e);
 		}
 	}
 	
@@ -89,7 +94,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	 * @return the current host location url.
 	 */
 	protected abstract void login(DefaultHttpClient client)
-	throws ContactListImporterException, IOException, URISyntaxException, InterruptedException, HttpException;
+	throws Exception;
 	
 	/**
 	 * Parses the contactContent string that was retrieved and
@@ -98,7 +103,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	 * @para, contactsContent the content of the contacts file retrieved from the server
 	 * @return a list of contacts parsed from the contactsContent
 	 */
-	protected abstract List<Contact> parseContacts(InputStream contactsContent) throws IOException;
+	protected abstract List<Contact> parseContacts(InputStream contactsContent) throws Exception;
 
 	
 	/**
@@ -107,6 +112,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	 */
 	protected DefaultHttpClient getHttpClient() {
 		DefaultHttpClient client=new DefaultHttpClient();
+		client.setCookieStore(new UpdateableCookieStore());
 		client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
 		
 		List<Header> headers=new ArrayList<Header>();
@@ -181,6 +187,17 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
     return resp.getEntity().getContent();
 	}
 	
+	/**
+	 * Reads an inputstream and converts it to a string.
+	 * Note that this is rather memory intensive, if you
+	 * do not need random access in the inputstream you
+	 * should iterate sequentially over the lines using
+	 * readLine()
+	 * 
+	 * @param is the inputstream to convert
+	 * @return the content of the input stream
+	 * @throws IOException if reading the inputstream fails
+	 */
 	protected String readInputStream(InputStream is) throws IOException {
 		BufferedReader in=new BufferedReader(new InputStreamReader(is));
 		StringBuffer buffer=new StringBuffer();
@@ -189,6 +206,24 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 			buffer.append(line);
 		}
 		return buffer.toString();
+	}
+	
+	/**
+	 * Wether the email ends with one of the domains
+	 * in the domains list.
+	 * 
+	 * @param email the email tot test
+	 * @param domains a list of domains. 
+	 * @return true if the email ends with one of the domains in the domains list
+	 */
+	public static boolean isConformingEmail(String email, String[] domains) {
+		if(email==null) return false;
+		for(String d : domains) {
+			if(email.indexOf(d)==email.length()-d.length()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

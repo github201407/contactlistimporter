@@ -1,5 +1,6 @@
 package com.xdatasystem.contactsimporter;
 
+import com.xdatasystem.contactsimporter.gmail.GmailImporter;
 import com.xdatasystem.contactsimporter.hotmail.HotmailImporter;
 
 /**
@@ -10,7 +11,34 @@ import com.xdatasystem.contactsimporter.hotmail.HotmailImporter;
  */
 public class ContactListImporterFactory {
 
-	public static ContactListImporter create(String email, String password) {
+	/**
+	 * Guesses which service to use given an input email adress.
+	 * Note that this does not work for all e-mail adresses,
+	 * gmail for example allow users to use their own domain name,
+	 * then the guess will fail.
+	 * Returns null if no match could be found
+	 * 
+	 * @param email
+	 * @param password
+	 * @return a importer for the email adress or null if no importer could be found
+	 */
+	public static ContactListImporter guess(String email, String password) {
+		if(HotmailImporter.isHotmail(email)) {
+			return new HotmailImporter(email, password);
+		
+		} else if(GmailImporter.isGmail(email)) {
+			return new GmailImporter(email, password);
+			
+		}
+		return null;
+	}
+	
+	public static ContactListImporter hotmail(String email, String password) {
 		return new HotmailImporter(email, password);
 	}
+	
+	public static ContactListImporter gmail(String email, String password) {
+		return new HotmailImporter(email, password);
+	}
+		
 }
