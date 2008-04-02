@@ -15,10 +15,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import com.xdatasystem.contactsimporter.AuthenticationException;
-import com.xdatasystem.contactsimporter.Contact;
+import com.xdatasystem.contactsimporter.ContactImpl;
 import com.xdatasystem.contactsimporter.ContactListImporterException;
 import com.xdatasystem.contactsimporter.ContactListImporterImpl;
 import com.xdatasystem.contactsimporter.UpdateableCookieStore;
+import com.xdatasystem.user.Contact;
 
 /**
  * Contacts importer for the gmail service.
@@ -126,8 +127,12 @@ public class GmailImporter extends ContactListImporterImpl {
 				if(!jsonObj.has("Address")) continue;
 				String email=jsonObj.getString("Address");
 				
+				if(name==null || name.length()==0) {
+					name=email.substring(0, email.indexOf("@"));
+				}
+				
 				contacts.add(
-					new Contact(name==null ? email : name, email)
+					new ContactImpl(name, email)
 				);
 			}
 		}

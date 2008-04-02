@@ -3,6 +3,7 @@ package com.xdatasystem.contactsimporter;
 import java.io.IOException;
 import java.util.List;
 import org.apache.http.HttpException;
+import com.xdatasystem.user.Contact;
 
 /**
  * Interface to the retrieval of contacts lists.

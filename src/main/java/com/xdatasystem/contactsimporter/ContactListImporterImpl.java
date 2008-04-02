@@ -26,6 +26,7 @@ import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HTTP;
 import com.xdatasystem.contactsimporter.hotmail.HotmailImporter;
+import com.xdatasystem.user.Contact;
 
 /**
  * Abstract, general implementation of ContactListImporter.
@@ -62,7 +63,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	
 	public List<Contact> getContactList() throws ContactListImporterException {
 
-		//System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
 		//System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "debug");
 		
 		try {
@@ -76,18 +77,32 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	   		ExecutionContext.HTTP_TARGET_HOST)
 	   	).getHostName();
 	   	
-			String listUrl=String.format(getContactListURL(), host);
-			
-			log.info("Retrieving contactlist");
-			InputStream input=this.doGet(client, listUrl, null);
-			log.info("Parsing contactlist");
-	    return parseContacts(this.doGet(client, listUrl, null));
+			return this.getAndParseContacts(client, host);
 	    
 		} catch(Exception e) {
 			throw new ContactListImporterException("Exception occured", e);
 		}
 	}
 	
+	protected List<Contact> getAndParseContacts(DefaultHttpClient client, String host) throws Exception {
+		
+		String listUrl=String.format(getContactListURL(), host);
+		log.info("Retrieving contactlist");
+		InputStream input=this.getContactListContent(client, listUrl, null);
+		log.info("Parsing contactlist");
+    return parseContacts(input);
+	}
+
+	/**
+	 * Gets the contact list using HTTP Get,
+	 * override to implement your own implementation
+	 * 
+	 * @return the content of the contact list as an inputstream
+	 */
+	protected InputStream getContactListContent(DefaultHttpClient client, String listUrl, String referer) throws ContactListImporterException, URISyntaxException, InterruptedException, HttpException, IOException {
+		return this.doGet(client, listUrl, referer);
+	}
+
 	/**
 	 * Performs the login. The http client is logged in after this method call.
 	 * 
@@ -122,10 +137,10 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 		return client;
 	}
 	
-	private void setHeaders(HttpRequest req, String referer) {
+	protected void setHeaders(HttpRequest req, String referer) {
 		// mimic firefox headers
 		req.addHeader("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; nl; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13");
-		req.addHeader("Accept", "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5");
+		req.addHeader("Accept", "text/xml,text/javascript,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5");
 	  req.addHeader("Accept-Language", "en-us;q=0.7,en;q=0.3");
 	  req.addHeader("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7");
 	  if(referer!=null) {
@@ -169,6 +184,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 		HttpPost post=new HttpPost(url);
 		setHeaders(post, referer);
 		post.addHeader("Content-Type", "application/x-www-form-urlencoded");
+		
 		post.setEntity(new UrlEncodedFormEntity(data, HTTP.UTF_8));
 		HttpProtocolParams.setUseExpectContinue(client.getParams(), false);
 		HttpProtocolParams.setUseExpectContinue(post.getParams(), false);
@@ -198,6 +214,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 		while ((line = in.readLine()) != null) {
 			buffer.append(line);
 		}
+		is.close();
 		return buffer.toString();
 	}
 	

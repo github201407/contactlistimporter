@@ -1,16 +1,18 @@
 package com.xdatasystem.contactsimporter;
 
+import com.xdatasystem.user.Contact;
+
 /**
  * Simple representation for a contact.
  * A contact has a name and an email;
  * 
  * @author Tjerk Wolterink
  */
-public class Contact {
+public class ContactImpl implements Contact {
 	private String name;
 	private String email;
 	
-	public Contact(String name, String email) {
+	public ContactImpl(String name, String email) {
 		this.name=name;
 		this.email=email;
 	}
@@ -32,7 +34,7 @@ public class Contact {
 	 * 
 	 * @return the email address
 	 */
-	public String getEmail() {
+	public String getEmailAddress() {
 		return email;
 	}
 	

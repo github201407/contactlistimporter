@@ -13,6 +13,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import com.xdatasystem.contactsimporter.*;
+import com.xdatasystem.user.Contact;
 import java.util.logging.Logger;
 import java.util.regex.*;
 
@@ -116,8 +117,8 @@ public class HotmailImporter extends ContactListImporterImpl {
 					name+=" "+parseValue(values[2]);
 				if(values[3].length()>0)
 					name+=" "+parseValue(values[3]);
-				if(name.length()==2) name=email;
-				contacts.add(new Contact(name, email));
+				if(name.length()==2) name=email.substring(0, email.indexOf("@"));
+				contacts.add(new ContactImpl(name, email));
 			}
 			i++;
 		}
@@ -162,7 +163,9 @@ public class HotmailImporter extends ContactListImporterImpl {
 	public static boolean isHotmail(String email) {
 		String[] domains={
 			"hotmail.com",
-			"live.com"
+			"live.com",
+			"live.nl",
+			"msn.com"
 		};
 		return ContactListImporterImpl.isConformingEmail(email, domains);
 	}
