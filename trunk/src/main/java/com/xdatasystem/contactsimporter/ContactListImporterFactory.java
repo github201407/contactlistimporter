@@ -2,6 +2,7 @@ package com.xdatasystem.contactsimporter;
 
 import com.xdatasystem.contactsimporter.gmail.GmailImporter;
 import com.xdatasystem.contactsimporter.hotmail.HotmailImporter;
+import com.xdatasystem.contactsimporter.hyves.HyvesImporter;
 
 /**
  * Factory for creating ContactListImporter objects.
@@ -39,6 +40,10 @@ public class ContactListImporterFactory {
 	
 	public static ContactListImporter gmail(String email, String password) {
 		return new HotmailImporter(email, password);
+	}
+	
+	public static ContactListImporter hyves(String email, String password) {
+		return new HyvesImporter(email, password);
 	}
 		
 }
