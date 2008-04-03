@@ -39,7 +39,7 @@ public class ContactListImporterFactory {
 	}
 	
 	public static ContactListImporter gmail(String email, String password) {
-		return new HotmailImporter(email, password);
+		return new GmailImporter(email, password);
 	}
 	
 	public static ContactListImporter hyves(String email, String password) {

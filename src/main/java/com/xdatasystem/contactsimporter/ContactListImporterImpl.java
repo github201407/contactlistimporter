@@ -80,7 +80,10 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 			return this.getAndParseContacts(client, host);
 	    
 		} catch(Exception e) {
-			throw new ContactListImporterException("Exception occured", e);
+			if(e instanceof ContactListImporterException) {
+				throw (ContactListImporterException)e;
+			}
+			throw new ContactListImporterException("Exception occured: "+e.getMessage(), e);
 		}
 	}
 	
