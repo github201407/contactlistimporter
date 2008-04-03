@@ -12,6 +12,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import org.apache.http.client.HttpClient;
 import org.apache.http.*;
 import org.apache.http.client.methods.*;
@@ -39,11 +40,14 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	private String username;
 	private String password;
 	private static Logger log=Logger.getLogger(HotmailImporter.class.getPackage().getName());
-	
+	private Pattern emailPattern;
 
 	public ContactListImporterImpl(String username, String password) {
 		this.username=username;
 		this.password=password;
+		emailPattern=Pattern.compile(
+			"^[0-9a-z]([-_.~]?[0-9a-z])*@[0-9a-z]([-.]?[0-9a-z])*\\.[a-z]{2,4}$"
+		);
 	}
 	
 	protected Logger getLogger() {
@@ -60,6 +64,10 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	
 	public abstract String getLoginURL();
 	public abstract String getContactListURL();
+	
+	public boolean isEmailAddress(String email) {
+		return emailPattern.matcher(email).matches();
+	}
 	
 	public List<Contact> getContactList() throws ContactListImporterException {
 
