@@ -41,5 +41,13 @@ public class ContactImpl implements Contact {
 	public String toString() {
 		return "name: "+name+", email: "+email;
 	}
-
+	
+	/**
+	 * A contact is equal to another contact
+	 * if the e-mail adresess are equal
+	 */
+	public boolean equals(Object o) {
+		if(!(o instanceof Contact)) return false;
+		return email.equals(((Contact)o).getEmailAddress());
+	}
 }

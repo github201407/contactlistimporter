@@ -21,6 +21,18 @@ import com.xdatasystem.contactsimporter.ContactListImporterException;
 import com.xdatasystem.contactsimporter.ContactListImporterImpl;
 import com.xdatasystem.user.Contact;
 
+/**
+ * Contact importer for the hyves social network site: 
+ * http://www.hyves.nl
+ * <br/><br/>
+ * Hyves is holland what facebook and myspace is
+ * internationally.
+ * <br/><br/>
+ * This importer is a bit slow because the contacts
+ * can only be retrieved page by page.
+ * 
+ * @author Tjerk Wolterink
+ */
 public class HyvesImporter extends ContactListImporterImpl {
 	private String extraField;
 	
@@ -65,6 +77,8 @@ public class HyvesImporter extends ContactListImporterImpl {
 	}
 	
 	private String getExtraField(DefaultHttpClient client) throws ContactListImporterException, IOException, URISyntaxException, InterruptedException, HttpException {
+		getLogger().info("Retrieve first hyves contacts page");
+		
 		String content=this.readInputStream(
 			this.doGet(client, "http://www.hyves.nl/berichten/contacts/", "http://www.hyves.nl")
 		);
@@ -151,7 +165,6 @@ public class HyvesImporter extends ContactListImporterImpl {
 		String beginPart="width=\"40%\">";
 		int index;
 		int lastIndex;
-		int endTableIndex=-1;
 		boolean isFirst=true;
 		
 		while(true) {
@@ -162,15 +175,8 @@ public class HyvesImporter extends ContactListImporterImpl {
 					break;
 				}
 			}
-			if(endTableIndex>0 && index>endTableIndex) {
-				// end of table reached..
-				break;
-			}
 			
 			content=content.substring(index+beginPart.length());
-			if(isFirst) {
-				endTableIndex=content.indexOf("</table>");
-			}
 			isFirst=false;
 			
 			index=content.indexOf("\">");
@@ -202,8 +208,11 @@ public class HyvesImporter extends ContactListImporterImpl {
 			}
 			
 			if(isEmailAddress(email)) {
+				
 				Contact contact=new ContactImpl(name, email);
-				contacts.add(contact);
+				if(!contacts.contains(contact)) {
+					contacts.add(contact);
+				}
 			}
 		}
 		
