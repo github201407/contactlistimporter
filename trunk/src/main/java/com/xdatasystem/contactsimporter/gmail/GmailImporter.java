@@ -130,10 +130,13 @@ public class GmailImporter extends ContactListImporterImpl {
 				if(name==null || name.length()==0) {
 					name=email.substring(0, email.indexOf("@"));
 				}
+				email=email.toLowerCase();
 				
-				contacts.add(
-					new ContactImpl(name, email)
-				);
+				if(isEmailAddress(email)) {
+					contacts.add(
+						new ContactImpl(name, email)
+					);
+				}
 			}
 		}
 		

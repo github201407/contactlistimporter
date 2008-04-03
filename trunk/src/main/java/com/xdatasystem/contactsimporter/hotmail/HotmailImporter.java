@@ -118,7 +118,12 @@ public class HotmailImporter extends ContactListImporterImpl {
 				if(values[3].length()>0)
 					name+=" "+parseValue(values[3]);
 				if(name.length()==2) name=email.substring(0, email.indexOf("@"));
-				contacts.add(new ContactImpl(name, email));
+				
+				email=email.toLowerCase();
+				
+				if(isEmailAddress(email)) {
+					contacts.add(new ContactImpl(name, email));
+				}
 			}
 			i++;
 		}

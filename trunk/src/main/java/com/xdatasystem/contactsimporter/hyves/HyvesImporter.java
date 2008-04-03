@@ -22,6 +22,7 @@ import com.xdatasystem.contactsimporter.ContactListImporterImpl;
 import com.xdatasystem.user.Contact;
 
 public class HyvesImporter extends ContactListImporterImpl {
+	private String extraField;
 	
 	public HyvesImporter(String username, String password) {
 		super(username, password);
@@ -56,11 +57,30 @@ public class HyvesImporter extends ContactListImporterImpl {
 		String content=this.readInputStream(
 			this.doPost(client, this.getLoginURL(), data, "http://www.hyves.nl/")
 		);
-		System.out.println(content);
+		
 		if(content.contains("combination is unknown")) {
 			throw new AuthenticationException("Username and password do not match");
 			
 		}
+	}
+	
+	private String getExtraField(DefaultHttpClient client) throws ContactListImporterException, IOException, URISyntaxException, InterruptedException, HttpException {
+		String content=this.readInputStream(
+			this.doGet(client, "http://www.hyves.nl/berichten/contacts/", "http://www.hyves.nl")
+		);
+		
+		String prePattern="extra: '";
+		int index=content.indexOf(prePattern);
+		if(index==-1) {
+			throw new ContactListImporterException("Hyves changed protocols, the extra field could not be found");
+		}
+		String newContent=content.substring(index+prePattern.length());
+		index=newContent.indexOf("'");
+		if(index==-1) {
+			throw new ContactListImporterException("Hyves changed protocols, the extra field could not be found");
+		}
+		this.extraField=newContent.substring(0, index);
+		return content;
 	}
 
 	@Override
@@ -77,9 +97,13 @@ public class HyvesImporter extends ContactListImporterImpl {
 		List<Contact> contacts=new ArrayList<Contact>(80);
 		boolean doNext;
 		int pageNr=1;
+		String content=getExtraField(client);
+		
+		parseAndAdd(content, contacts);
+		
 		do {
-			doNext=addContacts(client, contacts, pageNr);
 			pageNr++;
+			doNext=addContacts(client, contacts, pageNr);
 		} while(doNext);
 		
 		return contacts;
@@ -94,13 +118,12 @@ public class HyvesImporter extends ContactListImporterImpl {
 			new BasicNameValuePair("name", "member_friend"),
 			new BasicNameValuePair("pageNr", ""+pageNr),
 			new BasicNameValuePair("config", "hyvespager-config.php"),
-			//name=member_friend&pageNr=2&config=hyvespager-config.php&extra=jxeJeN6Yil0lMNx2O5GuUEOtMV2ycjkbf1Lvgl5AOFJZqrBUFT7qBK4jinOMMjlPN7MKHXy0T%2B27mObv4cWcVgZP8NfeW7VbWgwP1a3JMjEPDtC6pYocYuAoWH8kGGxtQV71yKL%2FF9HRHps3992SAoGyzaFxiLo%2FtYiVSCUu6grMN%2BHAASo9v4lhhJ0cACq%2Bve6PZk8DOMF4J05%2B3bN59rP3UbdRVELVEusjLw1P4zltAknotOpla5Svs4jO%2BVmx
-			new BasicNameValuePair("extra", "jxeJeN6Yil0lMNx2O5GuUEOtMV2ycjkbf1Lvgl5AOFJZqrBUFT7qBK4jinOMMjlPN7MKHXy0T+27mObv4cWcVgZP8NfeW7VbWgwP1a3JMjEPDtC6pYocYuAoWH8kGGxtQV71yKL/F9HRHps3992SAoGyzaFxiLo/tYiVSCUu6grMN+HAASo9v4lhhJ0cACq+ve6PZk8DOMF4J05+3bN59rP3UbdRVELVEusjLw1P4zltAknotOpla5Svs4jO+Vmx")
+			new BasicNameValuePair("extra", this.extraField)
 		};
 		
 
 		HttpPost post=new HttpPost(listUrl);
-		System.out.println(listUrl);
+		
 		super.setHeaders(post, "http://www.hyves.nl/berichten/contacts/");
 		post.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 		post.addHeader("X-Requested-With", "XMLHttpRequest");
@@ -115,16 +138,20 @@ public class HyvesImporter extends ContactListImporterImpl {
     //if (statusCode!=HttpStatus.SC_OK) {
     //	throw new ContactListImporterException("Page GET request failed NOK: "+post.getStatusLine());
     //}
-    return parseAndAdd(resp.getEntity().getContent(), contacts);
+    return parseAndAdd(
+    	readInputStream(resp.getEntity().getContent()),
+    	contacts
+    );
 	}
 
-	private boolean parseAndAdd(InputStream contentStream, List<Contact> contacts) throws IOException {
+	private boolean parseAndAdd(String content, List<Contact> contacts) throws IOException {
 		getLogger().info("Parsing hyves contacts page");
 		
-		String content=readInputStream(contentStream);
+		
 		String beginPart="width=\"40%\">";
 		int index;
 		int lastIndex;
+		int endTableIndex=-1;
 		boolean isFirst=true;
 		
 		while(true) {
@@ -135,9 +162,16 @@ public class HyvesImporter extends ContactListImporterImpl {
 					break;
 				}
 			}
-			isFirst=false;
+			if(endTableIndex>0 && index>endTableIndex) {
+				// end of table reached..
+				break;
+			}
 			
 			content=content.substring(index+beginPart.length());
+			if(isFirst) {
+				endTableIndex=content.indexOf("</table>");
+			}
+			isFirst=false;
 			
 			index=content.indexOf("\">");
 			lastIndex=content.indexOf("</a>");
@@ -152,14 +186,25 @@ public class HyvesImporter extends ContactListImporterImpl {
 			if(lastIndex==-1) continue;
 			String email=content.substring(0, lastIndex).trim();
 			
+			index=email.indexOf(">");
+			if(index>0) {
+				email=email.substring(index+1);
+			}
+			index=email.indexOf("<");
+			if(index>0) {
+				email=email.substring(0, index);
+			}
+			email=email.toLowerCase();
+			
 			if(email.length()==0) continue;
 			if(name.length()==0) {
 				name=email.substring(0, email.indexOf("@"));
 			}
 			
-			Contact contact=new ContactImpl(name, email);
-			System.out.println(contact);
-			contacts.add(contact);
+			if(isEmailAddress(email)) {
+				Contact contact=new ContactImpl(name, email);
+				contacts.add(contact);
+			}
 		}
 		
 		return true;
