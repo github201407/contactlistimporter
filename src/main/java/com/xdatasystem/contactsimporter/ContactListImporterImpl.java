@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.apache.http.client.HttpClient;
@@ -170,14 +171,15 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	protected InputStream doGet(HttpClient client, String url, String referer)
 		throws ContactListImporterException, URISyntaxException, InterruptedException, HttpException, IOException
 	{
-		
+		client.getConnectionManager().closeIdleConnections(0, TimeUnit.MILLISECONDS);
 		HttpGet get=new HttpGet(url);
 		setHeaders(get, referer);
     HttpResponse resp=client.execute(get, client.getDefaultContext());
     //if (statusCode!=resp.get) {
     //	throw new ContactListImporterException("Page GET request failed NOK: "+get.getStatusLine());
     //}
-    return resp.getEntity().getContent();
+    InputStream content=resp.getEntity().getContent();
+    return content;
 	}
 
 	/**
@@ -191,7 +193,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	protected InputStream doPost(HttpClient client, String url, NameValuePair[] data, String referer)
 		throws ContactListImporterException, HttpException, IOException, InterruptedException, URISyntaxException
 	{
-		
+		client.getConnectionManager().closeIdleConnections(0, TimeUnit.MILLISECONDS);
 		HttpPost post=new HttpPost(url);
 		setHeaders(post, referer);
 		post.addHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -204,7 +206,8 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
     //if (statusCode!=HttpStatus.SC_OK) {
     //	throw new ContactListImporterException("Page GET request failed NOK: "+post.getStatusLine());
     //}
-    return resp.getEntity().getContent();
+    InputStream content=resp.getEntity().getContent();
+    return content;
 	}
 	
 	/**

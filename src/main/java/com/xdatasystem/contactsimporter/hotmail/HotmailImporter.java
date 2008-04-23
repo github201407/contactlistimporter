@@ -102,12 +102,16 @@ public class HotmailImporter extends ContactListImporterImpl {
 	protected List<Contact> parseContacts(InputStream contactsContent) throws IOException {
 		List<Contact> contacts=new ArrayList<Contact>(10);
 		BufferedReader in=new BufferedReader(new InputStreamReader(contactsContent));
+		String separator=";";
 		String line;
 		int i=0;
 		while ((line = in.readLine()) != null) {
-			
-			if(i>1) {
-				String[] values=line.split(";");
+			System.out.println(line);
+			if(i>0) {
+				if(i==1 && !line.contains(separator)) {
+					separator=",";
+				}
+				String[] values=line.split(separator);
 				if(values.length<47) continue;
 				String email=parseValue(values[46]);
 				if(email.length()==0) continue;
