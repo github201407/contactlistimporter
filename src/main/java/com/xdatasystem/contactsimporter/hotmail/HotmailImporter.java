@@ -143,9 +143,11 @@ public class HotmailImporter extends ContactListImporterImpl {
 	}
 
 	private String getInputValue(String name, String content) throws ContactListImporterException {
-		Pattern p=Pattern.compile("^.+value=\"([^\\s\"]+)\"");
+		Pattern p=Pattern.compile("^.*value=\"([^\\s\"]+)\"");
 		int index=content.indexOf(name)+name.length()+2;
 		content=content.substring(index, index+200 > content.length() ? content.length() : index+200);
+		
+		System.out.println(content);
 		
 		Matcher matcher=p.matcher(content);
 		if(!matcher.find()) {
