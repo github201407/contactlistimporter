@@ -129,7 +129,15 @@ public class YahooImporter extends ContactListImporterImpl {
 		for (String[] entry : myEntries) {
 
 			name = entry[0] + " " + entry[1] + " " + entry[2] + " (" + entry[3] +")";
-			email = entry[4];
+			if (!"".equals(entry[4])) {
+			    email = entry[4];
+			} else {
+			    if (!"".equals(entry[7])) {
+			        email = entry[7] + "@yahoo.com";
+			    } else {
+			        email = "";
+			    }
+			}
 			contacts.add(new ContactImpl(name, email));
 		}
 
