@@ -8,6 +8,7 @@ import java.util.List;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.UrlEncodedFormEntity;
 import org.apache.http.cookie.Cookie;
@@ -42,34 +43,50 @@ public class HyvesImporter extends ContactListImporterImpl {
 	
 	@Override
 	public String getContactListURL() {
-		return "http://www.hyves.nl/index.php?xmlHttp=1&module=pager&action=showPage";
+		return "http://www.hyves.nl/berichten/contacts/?letter=";
 	}
 
 	@Override
 	public String getLoginURL() {
 		// TODO Auto-generated method stub
-		return "http://www.hyves.nl/?module=authentication&action=basicLogin";
+		return "http://www.hyves.nl/?module=authentication&action=login";
 	}
 
 	@Override
 	protected void login(DefaultHttpClient client) throws Exception {
 		// get required cookies
-		InputStream is=this.doGet(client, "http://www.hyves.nl", "");
-		while(is.read()!=-1) {}
-		is.close();
+		String content=this.readInputStream(this.doGet(client, "http://www.hyves.nl", ""));
+		int index=content.indexOf("id=\"loginform\"");
+		if(index==-1) {
+			throwProtocolChanged();
+		}
+		content=content.substring(index);
+		String test="action=\"";
+		index=content.indexOf(test);
+		if(index==-1) {
+			throwProtocolChanged();
+		}
+		content=content.substring(index+test.length());
+		test="\"";
+		index=content.indexOf(test);
+		if(index==-1) {
+			throwProtocolChanged();
+		}
+		String loginUrl=content.substring(0, index);
 		
+		System.out.println("login url: "+loginUrl);
 		
 		NameValuePair[] data = {
-			new BasicNameValuePair("login_username", this.getUsername()),
-			new BasicNameValuePair("login_password", this.getPassword()),
+			new BasicNameValuePair("auth_username", this.getUsername()),
+			new BasicNameValuePair("auth_password", this.getPassword()),
 			new BasicNameValuePair("btnLogin", "Ok"),
 			new BasicNameValuePair("login_initialPresence", "offline"),
 			new BasicNameValuePair("auth_currentUrl", "http://www.hyves.nl/berichten/contacts/"),
 		};
-		String content=this.readInputStream(
-			this.doPost(client, this.getLoginURL(), data, "http://www.hyves.nl/")
+		content=this.readInputStream(
+			this.doPost(client, loginUrl, data, "http://www.hyves.nl/")
 		);
-		
+		System.out.println(content);
 		if(content.contains("combination is unknown")) {
 			throw new AuthenticationException("Username and password do not match");
 			
@@ -84,6 +101,7 @@ public class HyvesImporter extends ContactListImporterImpl {
 		);
 		
 		String prePattern="extra: '";
+		System.out.println(content);
 		int index=content.indexOf(prePattern);
 		if(index==-1) {
 			throw new ContactListImporterException("Hyves changed protocols, the extra field could not be found");
@@ -109,59 +127,63 @@ public class HyvesImporter extends ContactListImporterImpl {
 		
 		getLogger().info("Retrieving contactlist");
 		List<Contact> contacts=new ArrayList<Contact>(80);
-		boolean doNext;
-		int pageNr=1;
-		String content=getExtraField(client);
 		
-		parseAndAdd(content, contacts);
-		
-		do {
-			pageNr++;
-			doNext=addContacts(client, contacts, pageNr);
-		} while(doNext);
+		for(int pageChar=97;pageChar<125;pageChar++) {
+			addContacts(client, contacts, (char)pageChar);
+		}
 		
 		return contacts;
 	}
 	
-	protected boolean addContacts(DefaultHttpClient client, List<Contact> contacts, int pageNr) throws ContactListImporterException, URISyntaxException, InterruptedException, HttpException, IOException {
-		String listUrl=getContactListURL();
+	protected void addContacts(DefaultHttpClient client, List<Contact> contacts, char pageChar) throws ContactListImporterException, URISyntaxException, InterruptedException, HttpException, IOException {
+		String listUrl=getContactListURL()+pageChar;
 		
-		getLogger().info("Retrieve hyves contacts page "+pageNr);
+		System.out.println(pageChar);
 		
+		getLogger().info("Retrieve hyves contacts page "+listUrl);
+		/*
 		NameValuePair[] data = {
 			new BasicNameValuePair("name", "member_friend"),
 			new BasicNameValuePair("pageNr", ""+pageNr),
 			new BasicNameValuePair("config", "hyvespager-config.php"),
 			new BasicNameValuePair("extra", this.extraField)
-		};
+		};*/
 		
 
-		HttpPost post=new HttpPost(listUrl);
+		HttpGet get=new HttpGet(listUrl);
 		
-		super.setHeaders(post, "http://www.hyves.nl/berichten/contacts/");
+		//super.setHeaders(get, "http://www.hyves.nl/berichten/contacts/");
+		/*
 		post.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
 		post.addHeader("X-Requested-With", "XMLHttpRequest");
 		post.addHeader("X-Prototype-Version", "1.6.0.2");
+		*/
 		
-		
+		/*
 		post.setEntity(new UrlEncodedFormEntity(data, HTTP.UTF_8));
 		HttpProtocolParams.setUseExpectContinue(client.getParams(), false);
 		HttpProtocolParams.setUseExpectContinue(post.getParams(), false);
-   	HttpResponse resp=client.execute(post, client.getDefaultContext());
+		*/
+		HttpResponse resp=client.execute(get, client.getDefaultContext());
    	
-    //if (statusCode!=HttpStatus.SC_OK) {
+		//if (statusCode!=HttpStatus.SC_OK) {
     //	throw new ContactListImporterException("Page GET request failed NOK: "+post.getStatusLine());
     //}
-    return parseAndAdd(
+    parseAndAdd(
     	readInputStream(resp.getEntity().getContent()),
     	contacts
     );
 	}
 
-	private boolean parseAndAdd(String content, List<Contact> contacts) throws IOException {
+	private void parseAndAdd(String content, List<Contact> contacts) throws IOException, ContactListImporterException {
 		getLogger().info("Parsing hyves contacts page");
 		
+		if(content.contains("You have to log in")) {
+			throw new ContactListImporterException("Login was not succesfull");
+		}
 		
+		System.out.println(content);
+		/*
 		String beginPart="width=\"40%\">";
 		int index;
 		int lastIndex;
@@ -217,7 +239,11 @@ public class HyvesImporter extends ContactListImporterImpl {
 		}
 		
 		return true;
-		
+		*/
+	}
+	
+	private void throwProtocolChanged() throws ContactListImporterException {
+		throw new ContactListImporterException("Hyves changed it's protocol, cannot import contactslist");
 	}
 
 }

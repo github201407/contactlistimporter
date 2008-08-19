@@ -42,6 +42,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	private String password;
 	private static Logger log=Logger.getLogger(HotmailImporter.class.getPackage().getName());
 	private Pattern emailPattern;
+	private DefaultHttpClient client;
 
 	public ContactListImporterImpl(String username, String password) {
 		this.username=username;
@@ -138,15 +139,19 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	 * Redirects are followed automatically.
 	 */
 	protected DefaultHttpClient getHttpClient() {
-		DefaultHttpClient client=new DefaultHttpClient();
-		client.setCookieStore(new UpdateableCookieStore());
-		client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
-		
-		List<Header> headers=new ArrayList<Header>();
-		headers.add(new BasicHeader("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; nl; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13"));
-		client.getParams().setParameter(ClientPNames.DEFAULT_HEADERS, headers);
-		
-		return client;
+		if(this.client==null) {
+			client=new DefaultHttpClient();
+			client.setCookieStore(new UpdateableCookieStore());
+			client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
+			
+			List<Header> headers=new ArrayList<Header>();
+			headers.add(new BasicHeader("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; nl; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13"));
+			client.getParams().setParameter(ClientPNames.DEFAULT_HEADERS, headers);
+			
+			return client;
+		} else {
+			return client;
+		}
 	}
 	
 	protected void setHeaders(HttpRequest req, String referer) {

@@ -1,20 +1,24 @@
 package com.xdatasystem.contactsimporter;
 
 import java.util.List;
-
 import com.xdatasystem.user.Contact;
-
 import junit.framework.TestCase;
 
 public class ContactListImporterTest extends TestCase {
 
 	public void testHotmailImporter() throws Exception {
-		ContactListImporter importer=ContactListImporterFactory.guess("tjerkwolterink@hotmail.com", "PASS");
+		ContactListImporter importer=ContactListImporterFactory.guess("tjerkwolterink@hotmail.com", "yyy");
 		testImporter(importer);
 	}
 
 	public void testGmailImporter() throws Exception {
-		ContactListImporter importer=ContactListImporterFactory.guess("tjerkw@gmail.com", "PASS");
+		ContactListImporter importer=ContactListImporterFactory.guess("tjerkw@gmail.com", "yyy");
+		testImporter(importer);
+	}
+	
+	public void testHyvesImporter() throws Exception {
+		//ContactListImporter importer=ContactListImporterFactory.hyves("testusertest", "testuser");
+		ContactListImporter importer=ContactListImporterFactory.hyves("tjerkwolterink", "yyy");
 		testImporter(importer);
 	}
 
