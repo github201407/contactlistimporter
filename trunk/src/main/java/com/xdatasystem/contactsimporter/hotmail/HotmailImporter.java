@@ -106,7 +106,7 @@ public class HotmailImporter extends ContactListImporterImpl {
 		String line;
 		int i=0;
 		while ((line = in.readLine()) != null) {
-			System.out.println(line);
+			//System.out.println(line);
 			if(i>0) {
 				if(i==1 && !line.contains(separator)) {
 					separator=",";
@@ -147,7 +147,7 @@ public class HotmailImporter extends ContactListImporterImpl {
 		int index=content.indexOf(name)+name.length()+2;
 		content=content.substring(index, index+200 > content.length() ? content.length() : index+200);
 		
-		System.out.println(content);
+		//System.out.println(content);
 		
 		Matcher matcher=p.matcher(content);
 		if(!matcher.find()) {
