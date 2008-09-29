@@ -3,6 +3,7 @@ package com.xdatasystem.contactsimporter;
 import com.xdatasystem.contactsimporter.gmail.GmailImporter;
 import com.xdatasystem.contactsimporter.hotmail.HotmailImporter;
 import com.xdatasystem.contactsimporter.hyves.HyvesImporter;
+import com.xdatasystem.contactsimporter.yahoo.YahooImporter;
 
 /**
  * Factory for creating ContactListImporter objects.
@@ -30,6 +31,9 @@ public class ContactListImporterFactory {
 		} else if(GmailImporter.isGmail(email)) {
 			return new GmailImporter(email, password);
 			
+		} else if(YahooImporter.isYahoo(email)) {
+			return new YahooImporter(email, password);
+			
 		}
 		return null;
 	}
@@ -46,4 +50,7 @@ public class ContactListImporterFactory {
 		return new HyvesImporter(email, password);
 	}
 		
+	public static ContactListImporter yahoo(String email, String password) {
+		return new YahooImporter(email, password);
+	}
 }
