@@ -81,8 +81,11 @@ public class HotmailImporter extends ContactListImporterImpl {
 	    throw new AuthenticationException("Username and password do not match");
     }	
     
-    System.out.println("Getting redireect location from the content:\nCONTENT:\n\n");
-    System.out.println(content);
+    if(content.contains("type your e-mail address in the following format")) {
+    	getLogger().info("Login failed, username not a valid email adress");
+	    throw new AuthenticationException("Username must be in the following format  yourname@example.com (hotmail.com)");
+    }
+    
     String redirectLocation=getJSRedirectLocation(content);
     this.doGet(client, redirectLocation, formUrl);
 	}
