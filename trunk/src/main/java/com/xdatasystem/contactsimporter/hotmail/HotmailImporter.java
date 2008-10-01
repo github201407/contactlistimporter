@@ -114,14 +114,17 @@ public class HotmailImporter extends ContactListImporterImpl {
 				String[] values=line.split(separator);
 				if(values.length<47) continue;
 				String email=parseValue(values[46]);
-				if(email.length()==0) continue;
+				int atIndex=email.indexOf("@");
+				// only add real contacts with a email adress 
+				if(email.length()==0 || atIndex==-1) continue;
+				
 				
 				String name=parseValue(values[1]);
 				if(values[2].length()>0)
 					name+=" "+parseValue(values[2]);
 				if(values[3].length()>0)
 					name+=" "+parseValue(values[3]);
-				if(name.length()==2) name=email.substring(0, email.indexOf("@"));
+				if(name.length()==2) name=email.substring(0, atIndex);
 				
 				email=email.toLowerCase();
 				

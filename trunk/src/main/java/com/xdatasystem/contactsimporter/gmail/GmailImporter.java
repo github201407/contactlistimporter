@@ -127,6 +127,10 @@ public class GmailImporter extends ContactListImporterImpl {
 				if(!jsonObj.has("Address")) continue;
 				String email=jsonObj.getString("Address");
 				
+				int atIndex=email.indexOf("@");
+				// only add contacts that have an email adress
+				if(atIndex==-1) continue;
+				
 				if(name==null || name.length()==0) {
 					name=email.substring(0, email.indexOf("@"));
 				}
