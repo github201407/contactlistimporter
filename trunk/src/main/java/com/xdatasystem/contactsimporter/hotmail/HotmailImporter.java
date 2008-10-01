@@ -81,6 +81,8 @@ public class HotmailImporter extends ContactListImporterImpl {
 	    throw new AuthenticationException("Username and password do not match");
     }	
     
+    System.out.println("Getting redireect location from the content:\nCONTENT:\n\n");
+    System.out.println(content);
     String redirectLocation=getJSRedirectLocation(content);
     this.doGet(client, redirectLocation, formUrl);
 	}
