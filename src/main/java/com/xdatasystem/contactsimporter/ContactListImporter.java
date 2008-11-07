@@ -1,8 +1,8 @@
 package com.xdatasystem.contactsimporter;
 
-import java.io.IOException;
+//import java.io.IOException;
 import java.util.List;
-import org.apache.http.HttpException;
+//import org.apache.http.HttpException;
 import com.xdatasystem.user.Contact;
 
 /**
@@ -35,6 +35,10 @@ public interface ContactListImporter {
 	 * This may take some time because first the user
 	 * must be logged in, and then the contact list must 
 	 * be retrieved.
+	 * <br/>
+	 * Only contacts that have an email adress should be retrieved,
+	 * however it is good practice to actually check for an
+	 * email adress in a contact.
 	 * 
 	 * @return a list of contacts
 	 * @throws ContactListImporterException
