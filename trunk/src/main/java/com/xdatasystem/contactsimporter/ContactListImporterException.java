@@ -8,6 +8,7 @@ package com.xdatasystem.contactsimporter;
  * @author Tjerk Wolterink
  */
 public class ContactListImporterException extends Exception {
+	static final long serialVersionUID = 1L;
 
 	public ContactListImporterException(String message) {
 		super(message);

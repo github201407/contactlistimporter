@@ -24,11 +24,20 @@ import com.xdatasystem.user.Contact;
 
 /**
  * Contacts importer for the yahoo service.
+ * Only imports contacts that have an email adress.
  *
  * @author Cristian Ventura
+ * @author Tjerk Wolterink
  */
 public class YahooImporter extends ContactListImporterImpl {
 
+	/**
+	 * Constructs a YahooImporter.
+	 * We recommand usage of the ContactListImporterFactory factory object to
+	 * instantiate this importer..
+	 * This decouples instantiation from implementation, and follows
+	 * the Factory Software Pattern.
+	 */
 	public YahooImporter(String username, String password) {
 		super(username, password);
 	}

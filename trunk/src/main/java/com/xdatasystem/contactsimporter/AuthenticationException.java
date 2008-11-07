@@ -7,6 +7,7 @@ package com.xdatasystem.contactsimporter;
  * @author Tjerk Wolterink
  */
 public class AuthenticationException extends ContactListImporterException {
+	static final long serialVersionUID = 1L;
 	
 	public AuthenticationException(String message) {
 		super(message);

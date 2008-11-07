@@ -9,14 +9,17 @@ public class ContactListImporterTest extends TestCase {
 	// Note: the passwords are wrong to protect my mail boxes,
 	// fill in correct credentials to test it
 	public void testHotmailImporter() throws Exception {
-		ContactListImporter importer=ContactListImporterFactory.guess("tjerkwolterink@hotmail.com", "password");
+		//ContactListImporter importer=ContactListImporterFactory.guess("tjerkwolterink@hotmail.com", "password");
+		ContactListImporter importer=ContactListImporterFactory.guess("freewebstestaccount@hotmail.com", "freewebs");
 		testImporter(importer);
 	}
 
+	/*
 	public void testGmailImporter() throws Exception {
 		ContactListImporter importer=ContactListImporterFactory.guess("tjerkw@gmail.com", "yyy");
 		testImporter(importer);
 	}
+	*/
 	
 	/* Hyves changed protocols.. does not work
 	public void testHyvesImporter() throws Exception {
@@ -25,11 +28,12 @@ public class ContactListImporterTest extends TestCase {
 		testImporter(importer);
 	}*/
 
-	
+	/*
 	public void testYahooImporter() throws Exception {
 		ContactListImporter importer=ContactListImporterFactory.guess("tjerkwolterink@yahoo.com", "password");
 		testImporter(importer);
 	}
+	*/
 	
 
 	public void testImporter(ContactListImporter importer) throws ContactListImporterException, InterruptedException {

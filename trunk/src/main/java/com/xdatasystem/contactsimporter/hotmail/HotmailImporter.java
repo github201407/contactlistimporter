@@ -14,7 +14,7 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import com.xdatasystem.contactsimporter.*;
 import com.xdatasystem.user.Contact;
-import java.util.logging.Logger;
+//import java.util.logging.Logger;
 import java.util.regex.*;
 
 /**
@@ -26,6 +26,15 @@ import java.util.regex.*;
 public class HotmailImporter extends ContactListImporterImpl {
 	private final static String PWDPAD="IfYouAreReadingThisYouHaveTooMuchFreeTime";
 	
+	/**
+	 * Constructs a HotmailImpoter for a specific user.
+	 * We recommand usage of the ContactListImporterFactory factory object.
+	 * This decouples instantiation from implementation, and follows
+	 * the Factory Software Pattern.
+	 * 
+	 * @param username the hotmail email adress of the user
+	 * @param password
+	 */
 	public HotmailImporter(String username, String password) {
 		super(username, password);
 	}
