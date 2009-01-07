@@ -2,6 +2,7 @@ package com.xdatasystem.contactsimporter;
 
 import com.xdatasystem.contactsimporter.gmail.GmailImporter;
 import com.xdatasystem.contactsimporter.hotmail.HotmailImporter;
+import com.xdatasystem.contactsimporter.hotmail.OldHotmailImporter;
 import com.xdatasystem.contactsimporter.hyves.HyvesImporter;
 import com.xdatasystem.contactsimporter.yahoo.YahooImporter;
 

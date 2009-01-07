@@ -1,8 +1,6 @@
 package com.xdatasystem.contactsimporter;
 
-//import java.io.IOException;
 import java.util.List;
-//import org.apache.http.HttpException;
 import com.xdatasystem.user.Contact;
 
 /**
@@ -11,6 +9,7 @@ import com.xdatasystem.user.Contact;
  * the actual implementation. 
  * 
  * @author Tjerk Wolterink
+ * @author Thomas Bernard
  */
 public interface ContactListImporter {
 
