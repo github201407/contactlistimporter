@@ -74,7 +74,7 @@ public class HyvesImporter extends ContactListImporterImpl {
 		}
 		String loginUrl=content.substring(0, index);
 		
-		System.out.println("login url: "+loginUrl);
+		//System.out.println("login url: "+loginUrl);
 		
 		NameValuePair[] data = {
 			new BasicNameValuePair("auth_username", this.getUsername()),

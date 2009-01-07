@@ -3,48 +3,58 @@ package com.xdatasystem.contactsimporter;
 import com.xdatasystem.user.Contact;
 
 /**
- * Simple representation for a contact.
- * A contact has a name and an email;
+ * Contact implementation class.
  * 
  * @author Tjerk Wolterink
+ * @author Thomas Bernard
  */
 public class ContactImpl implements Contact {
 	private String name;
 	private String email;
+	private String im;
 	
 	public ContactImpl(String name, String email) {
 		this.name=name;
 		this.email=email;
+		this.im="";
 	}
 	
-	/**
-	 * Returns the name of the contact.
-	 * Note that some contactImporters cannot
-	 * retrieve the name: In that case the name equals
-	 * the email address.
-	 * 
-	 * @return the name of the contact
-	 */
+	public ContactImpl(String name, String email, String im) {
+		this.name=name;
+		this.email=email;
+		this.im=im;
+	}
+	
 	public String getName() {
 		return name;
 	}
+	
+	public String getGeneratedName() {
+		if(name==null || name.length()==0) {
+			return email.substring(0, email.indexOf('@'));
+		} else {
+			return name;
+		}
+	}
 
-	/**
-	 * Returns the email address of the contact
-	 * 
-	 * @return the email address
-	 */
 	public String getEmailAddress() {
 		return email;
 	}
 	
+	public String getIMAddress() {
+		return im;
+	}
+	
 	public String toString() {
-		return "name: "+name+", email: "+email;
+		return 
+			"name: "+name+
+			", email: "+email+
+			(im==null ? "" : ", im: "+im);
 	}
 	
 	/**
 	 * A contact is equal to another contact
-	 * if the e-mail adresess are equal
+	 * if the e-mail adress are equal
 	 */
 	public boolean equals(Object o) {
 		if(!(o instanceof Contact)) return false;

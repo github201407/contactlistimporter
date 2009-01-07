@@ -3,12 +3,14 @@ package com.xdatasystem.contactsimporter.yahoo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.BufferedReader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpException;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
@@ -137,20 +139,37 @@ public class YahooImporter extends ContactListImporterImpl {
 		String email;
 		for (String[] entry : myEntries) {
 			
-			name=entry[0];
+			name=entry[0];	// First name
 			if(entry[1]!=null && entry[1].length()>0) {
-				name+=" " + entry[1];
+				// 2nd name
+				if(name.length() > 0)
+					name += " " + entry[1];
+				else
+					name = entry[1];
 			}
 			if(entry[2]!=null && entry[2].length()>0) {
-				name+=" " + entry[2];
+				// Last name
+				if(name.length() > 0)
+					name += " " + entry[2];
+				else
+					name = entry[2];
 			}
 			if(entry[3]!=null && entry[3].length()>0) {
-				name+=" (" + entry[3] +")";
+				// nickname
+				if(name.length() > 0)
+					name += " (" + entry[3] +")";
+				else
+					name = entry[3];
 			}
 			
 			if (!"".equals(entry[4])) {
+				// email
 			    email = entry[4];
 			} else {
+				// No Email, only yahoo messenger id. 
+				// We cannot guess the domain (it's not always @yahoo.com) !
+				continue;
+				/*
 			    if (!"".equals(entry[7])) {
 			        email = entry[7] + "@yahoo.com";
 			    } else {
@@ -158,19 +177,55 @@ public class YahooImporter extends ContactListImporterImpl {
 			        // we want the email adress , so skip this one
 			        continue;
 			    }
+			    */
 			}
-			contacts.add(new ContactImpl(name, email));
+			String im = "";
+			if(!"".equals(entry[7])) {
+				im = "ymsgr:" + entry[7];
+			}
+			if(!"".equals(entry[48])) {
+				if(im.length() > 0)
+					im = im + ",";
+				im += "skype:" + entry[48];				
+			}
+			if(!"".equals(entry[50])) {
+				if(im.length() > 0)
+					im = im + ",";
+				im += "icq:" + entry[50];				
+			}
+			if(!"".equals(entry[51])) {
+				if(im.length() > 0)
+					im = im + ",";
+				im += "xmpp:" + entry[51];				
+			}
+			if(!"".equals(entry[52])) {
+				if(im.length() > 0)
+					im = im + ",";
+				im += "msn:" + entry[52];				
+			}
+			if(!"".equals(entry[53])) {
+				if(im.length() > 0)
+					im = im + ",";
+				im += "aim:" + entry[53];				
+			}
+			contacts.add(new ContactImpl(name, email, im));
 		}
 
 		return contacts;
 	}
 
 	public static boolean isYahoo(String email) {
+		/*
 		String[] domains={
 			"yahoo.com",
-			"yahoo.com.ar"
+			"yahoo.com.ar",
+			"yahoo.ru",
+			"yahoo.fr",
+			"yahoo.co.uk"
 		};
 		return ContactListImporterImpl.isConformingEmail(email, domains);
+		*/
+		return (email.indexOf("@yahoo.") != -1);
 	}
 
 }
