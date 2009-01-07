@@ -17,7 +17,6 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.RedirectHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.UrlEncodedFormEntity;
@@ -296,9 +295,8 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	 */
 	protected void consumeInputStream(InputStream is) throws IOException {
 		BufferedReader in=new BufferedReader(new InputStreamReader(is));
-		String line;
-		while ((line = in.readLine()) != null) {
-			//System.out.println(line);
+
+		while (in.readLine() != null) {
 		}
 		is.close();
 	}
