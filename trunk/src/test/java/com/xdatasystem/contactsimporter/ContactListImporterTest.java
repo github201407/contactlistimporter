@@ -6,7 +6,7 @@ import junit.framework.TestCase;
 
 public class ContactListImporterTest extends TestCase {
 
-	/*
+	
 	// Note: the passwords are wrong to protect my mail boxes,
 	// fill in correct credentials to test it
 	public void testHotmailImporter() throws Exception {
@@ -14,7 +14,7 @@ public class ContactListImporterTest extends TestCase {
 		//ContactListImporter importer=ContactListImporterFactory.guess("freewebstestaccount@hotmail.com", "***");
 		testImporter(importer);
 	}
-	*/
+	
 
 	
 	public void testGmailImporter() throws Exception {
