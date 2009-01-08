@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpException;
 import org.apache.http.NameValuePair;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
@@ -19,6 +18,7 @@ import com.xdatasystem.contactsimporter.ContactImpl;
 import com.xdatasystem.contactsimporter.ContactListImporterException;
 import com.xdatasystem.contactsimporter.ContactListImporterImpl;
 import com.xdatasystem.contactsimporter.UpdateableCookieStore;
+import com.xdatasystem.contactsimporter.WebClient;
 import com.xdatasystem.user.Contact;
 
 /**
@@ -43,7 +43,7 @@ public class GmailImporter extends ContactListImporterImpl {
 	}
 
 	@Override
-	protected void login(DefaultHttpClient client) throws ContactListImporterException, IOException, URISyntaxException,
+	protected void login(WebClient client) throws ContactListImporterException, IOException, URISyntaxException,
 			InterruptedException, HttpException {
 		
 		NameValuePair[] data = {
@@ -66,10 +66,10 @@ public class GmailImporter extends ContactListImporterImpl {
 			"GMAIL_LOGIN",
 			"T"+time+"/"+(time-16)+"/"+time
 		);
-		client.getCookieStore().addCookie(cookie);
+		client.getHttpClient().getCookieStore().addCookie(cookie);
 		
 		String content=this.readInputStream(
-			this.doPost(client, this.getLoginURL(), data, "")
+			client.doPost(this.getLoginURL(), data, "")
 		);
 		if(content.contains("Username and password do not match")) {
 			throw new AuthenticationException("Username and password do not match");
@@ -85,7 +85,7 @@ public class GmailImporter extends ContactListImporterImpl {
 			
 		}
 		
-		UpdateableCookieStore cookies=(UpdateableCookieStore)client.getCookieStore();
+		UpdateableCookieStore cookies=(UpdateableCookieStore)client.getHttpClient().getCookieStore();
 		cookies.removeCookie("LSID");
 		cookies.removeCookie("GB");
 

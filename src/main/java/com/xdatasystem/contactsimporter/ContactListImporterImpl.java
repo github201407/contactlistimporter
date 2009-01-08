@@ -41,8 +41,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	private String password;
 	private static Logger log = Logger.getLogger(ContactListImporterImpl.class.getName());
 	private Pattern emailPattern;
-	private DefaultHttpClient client;
-	private String currentURL = null;
+	private WebClient client;
 
 	public ContactListImporterImpl(String username, String password) {
 		this.username=username;
@@ -50,6 +49,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 		emailPattern=Pattern.compile(
 			"^[0-9a-z]([-_.~]?[0-9a-z])*@[0-9a-z]([-.]?[0-9a-z])*\\.[a-z]{2,4}$"
 		);
+		client=new WebClient();
 	}
 	
 	protected Logger getLogger() {
@@ -65,27 +65,33 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	}
 	
 	public abstract String getLoginURL();
+	
 	public abstract String getContactListURL();
 	
 	public boolean isEmailAddress(String email) {
 		return emailPattern.matcher(email).matches();
 	}
+
+	public WebClient getWebClient() {
+		return client;
+	}
+	
+	public void setWebClient(WebClient client) {
+		this.client=client;
+	}
 	
 	public List<Contact> getContactList() throws ContactListImporterException {
 
-		//System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+		System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
 		//System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "debug");
 		
 		try {
 			
-			DefaultHttpClient client=this.getHttpClient();
 			log.info("Performing login");
 			login(client);
 			log.info("Login succeeded");
 			
-	   	String host=((HttpHost)client.getDefaultContext().getAttribute(
-	   		ExecutionContext.HTTP_TARGET_HOST)
-	   	).getHostName();
+	   	String host=client.getHostName();
 	   	
 			return this.getAndParseContacts(client, host);
 	    
@@ -97,33 +103,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 		}
 	}
 	
-	public List<Contact> getAndUpdateContactList(List<Contact> contacts) throws ContactListImporterException {
-		try {
-
-			DefaultHttpClient client=this.getHttpClient();
-			log.info("Performing login");
-			login(client);
-			log.info("Login succeeded");
-
-			String host=((HttpHost)client.getDefaultContext().getAttribute(
-					ExecutionContext.HTTP_TARGET_HOST)
-			).getHostName();
-
-			return this.getAndParseUpdateContacts(client, host, contacts);
-
-		} catch(Exception e) {
-			if(e instanceof ContactListImporterException) {
-				throw (ContactListImporterException)e;
-			}
-			throw new ContactListImporterException("Exception occured: "+e.getMessage(), e);
-		}
-	}
-	
-	protected List<Contact> getAndParseUpdateContacts(DefaultHttpClient client, String host, List<Contact> contacts) throws Exception {
-		return null;
-	}
-	
-	protected List<Contact> getAndParseContacts(DefaultHttpClient client, String host) throws Exception {
+	protected List<Contact> getAndParseContacts(WebClient client, String host) throws Exception {
 		
 		String listUrl=String.format(getContactListURL(), host);
 		log.info("Retrieving contactlist");
@@ -134,6 +114,18 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
     input.close();
     return contacts;
 	}
+	
+	/**
+	 * A subclass should run this method if something unexpected
+	 * happend: The service probably changed protocols. 
+	 * @throws ContactListImporterException
+	 */
+	protected void throwProtocolChanged() throws ContactListImporterException {
+		throw new ContactListImporterException(
+			"The email service '"+this.getClass().getName()+
+			"' changed it's protocol, cannot import contactslist"
+		);
+	}
 
 	/**
 	 * Gets the contact list using HTTP Get,
@@ -141,16 +133,18 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	 * 
 	 * @return the content of the contact list as an inputstream
 	 */
-	protected InputStream getContactListContent(DefaultHttpClient client, String listUrl, String referer) throws ContactListImporterException, URISyntaxException, InterruptedException, HttpException, IOException {
-		return this.doGet(client, listUrl, referer);
+	protected InputStream getContactListContent(WebClient client, String listUrl, String referer)
+		throws ContactListImporterException, URISyntaxException, InterruptedException, HttpException, IOException
+	{
+		return client.doGet(listUrl, referer);
 	}
 
 	/**
-	 * Performs the login. The http client is logged in after this method call.
+	 * Performs the login. The client is logged in after this method call.
 	 * 
 	 * @return the current host location url.
 	 */
-	protected abstract void login(DefaultHttpClient client)
+	protected abstract void login(WebClient client)
 	throws Exception;
 	
 	/**
@@ -161,109 +155,6 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	 * @return a list of contacts parsed from the contactsContent
 	 */
 	protected abstract List<Contact> parseContacts(InputStream contactsContent) throws Exception;
-
-	
-	/**
-	 * Gets a default HttpClient that mimics the beviour of Firefox 2.
-	 * Redirects are followed automatically.
-	 */
-	protected DefaultHttpClient getHttpClient() {
-		if(this.client==null) {
-			client=new DefaultHttpClient();
-			client.setCookieStore(new UpdateableCookieStore());
-			client.setRedirectHandler(new MemorizingRedirectHandler());
-			client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
-		
-			List<Header> headers=new ArrayList<Header>();
-			headers.add(new BasicHeader("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; nl; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13"));
-			client.getParams().setParameter(ClientPNames.DEFAULT_HEADERS, headers);
-			
-			return client;
-		} else {
-			return client;
-		}
-	}
-	
-	protected void setHeaders(HttpRequest req, String referer) {
-		// mimic firefox headers
-		//req.addHeader("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 5.1; nl; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13");
-		req.addHeader("Accept", "text/xml,text/javascript,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5");
-	  req.addHeader("Accept-Language", "en-us;q=0.7,en;q=0.3");
-	  req.addHeader("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7");
-	  if(referer!=null) {
-	  	req.addHeader("Referer", referer);
-	  }
-	}
-	
-	/**
-	 * Update where we are now. through 302/303 redirections we could get lost !
-	 * @param client
-	 */
-	private void updateCurrentUrl(HttpClient client) {
-		HttpRequest req = (HttpRequest)client.getDefaultContext().getAttribute(ExecutionContext.HTTP_REQUEST);
-		HttpHost host = (HttpHost)client.getDefaultContext().getAttribute(ExecutionContext.HTTP_TARGET_HOST);
-		currentURL = host.toURI() + req.getRequestLine().getUri();
-	}
-	
-	/**
-	 * @return the current url
-	 */
-	protected String getCurrentUrl() {
-		return this.currentURL;
-	}
-	
-	/**
-	 * Performs a http GET operation
-	 * 
-	 * @param client the client performing the request
-	 * @param url the url to retrieve
-	 * @param referer a possibly needed ref url, or null otherwise
-	 * @return the InputStream that contains the content
-	 */
-	protected InputStream doGet(HttpClient client, String url, String referer)
-		throws ContactListImporterException, URISyntaxException, InterruptedException, HttpException, IOException
-	{
-		client.getConnectionManager().closeIdleConnections(0, TimeUnit.MILLISECONDS);
-		HttpGet get=new HttpGet(url);
-		setHeaders(get, referer);
-    HttpResponse resp=client.execute(get, client.getDefaultContext());
-    //if (statusCode!=resp.get) {
-    //	throw new ContactListImporterException("Page GET request failed NOK: "+get.getStatusLine());
-    //}
-    updateCurrentUrl(client);
-    InputStream content=resp.getEntity().getContent();
-    return content;
-	}
-
-	/**
-	 * Performs a http POST operation
-	 * 
-	 * @param client the client performing the request
-	 * @param url the url to retrieve
-	 * @param referer a possibly needed ref url, or null otherwise
-	 * @return the InputStream that contains the content
-	 */
-	protected InputStream doPost(HttpClient client, String url, NameValuePair[] data, String referer)
-		throws ContactListImporterException, HttpException, IOException, InterruptedException, URISyntaxException
-	{
-		log.info("POST " + url);
-		//client.getConnectionManager().closeIdleConnections(0, TimeUnit.MILLISECONDS);
-		HttpPost post=new HttpPost(url);
-		setHeaders(post, referer);
-		post.addHeader("Content-Type", "application/x-www-form-urlencoded");
-		
-		post.setEntity(new UrlEncodedFormEntity(data, HTTP.UTF_8));
-		HttpProtocolParams.setUseExpectContinue(client.getParams(), false);
-		HttpProtocolParams.setUseExpectContinue(post.getParams(), false);
-   	HttpResponse resp=client.execute(post, client.getDefaultContext());
-   	
-    //if (statusCode!=HttpStatus.SC_OK) {
-    //	throw new ContactListImporterException("Page GET request failed NOK: "+post.getStatusLine());
-    //}
-   	updateCurrentUrl(client);
-    InputStream content=resp.getEntity().getContent();
-    return content;
-	}
 	
 	/**
 	 * Reads an inputstream and converts it to a string.
@@ -277,7 +168,7 @@ public abstract class ContactListImporterImpl implements ContactListImporter {
 	 * @throws IOException if reading the inputstream fails
 	 */
 	protected String readInputStream(InputStream is) throws IOException {
-		BufferedReader in=new BufferedReader(new InputStreamReader(is));
+		BufferedReader in=new BufferedReader(new InputStreamReader(is, "UTF-8"));
 		StringBuffer buffer=new StringBuffer();
 		String line;
 		while ((line = in.readLine()) != null) {

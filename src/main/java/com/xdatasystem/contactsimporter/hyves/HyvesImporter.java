@@ -14,6 +14,7 @@ import org.apache.http.message.BasicNameValuePair;
 import com.xdatasystem.contactsimporter.AuthenticationException;
 import com.xdatasystem.contactsimporter.ContactListImporterException;
 import com.xdatasystem.contactsimporter.ContactListImporterImpl;
+import com.xdatasystem.contactsimporter.WebClient;
 import com.xdatasystem.user.Contact;
 
 /**
@@ -47,9 +48,9 @@ public class HyvesImporter extends ContactListImporterImpl {
 	}
 
 	@Override
-	protected void login(DefaultHttpClient client) throws Exception {
+	protected void login(WebClient client) throws Exception {
 		// get required cookies
-		String content=this.readInputStream(this.doGet(client, "http://www.hyves.nl", ""));
+		String content=this.readInputStream(client.doGet("http://www.hyves.nl", ""));
 		int index=content.indexOf("id=\"loginform\"");
 		if(index==-1) {
 			throwProtocolChanged();
@@ -78,7 +79,7 @@ public class HyvesImporter extends ContactListImporterImpl {
 			new BasicNameValuePair("auth_currentUrl", "http://www.hyves.nl/berichten/contacts/"),
 		};
 		content=this.readInputStream(
-			this.doPost(client, loginUrl, data, "http://www.hyves.nl/")
+			client.doPost(loginUrl, data, "http://www.hyves.nl/")
 		);
 		System.out.println(content);
 		if(content.contains("combination is unknown")) {
@@ -87,11 +88,11 @@ public class HyvesImporter extends ContactListImporterImpl {
 		}
 	}
 	
-	private String getExtraField(DefaultHttpClient client) throws ContactListImporterException, IOException, URISyntaxException, InterruptedException, HttpException {
+	private String getExtraField(WebClient client) throws ContactListImporterException, IOException, URISyntaxException, InterruptedException, HttpException {
 		getLogger().info("Retrieve first hyves contacts page");
 		
 		String content=this.readInputStream(
-			this.doGet(client, "http://www.hyves.nl/berichten/contacts/", "http://www.hyves.nl")
+			client.doGet("http://www.hyves.nl/berichten/contacts/", "http://www.hyves.nl")
 		);
 		
 		String prePattern="extra: '";
@@ -234,10 +235,6 @@ public class HyvesImporter extends ContactListImporterImpl {
 		
 		return true;
 		*/
-	}
-	
-	private void throwProtocolChanged() throws ContactListImporterException {
-		throw new ContactListImporterException("Hyves changed it's protocol, cannot import contactslist");
 	}
 
 }

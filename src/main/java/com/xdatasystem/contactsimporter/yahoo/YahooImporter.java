@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpException;
 import org.apache.http.NameValuePair;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONException;
@@ -17,6 +16,7 @@ import com.xdatasystem.contactsimporter.AuthenticationException;
 import com.xdatasystem.contactsimporter.ContactImpl;
 import com.xdatasystem.contactsimporter.ContactListImporterException;
 import com.xdatasystem.contactsimporter.ContactListImporterImpl;
+import com.xdatasystem.contactsimporter.WebClient;
 import com.xdatasystem.user.Contact;
 
 /**
@@ -54,7 +54,7 @@ public class YahooImporter extends ContactListImporterImpl {
 	private static final String ADDRESS_BOOK_URL = "http://address.mail.yahoo.com/?1&VPC=import_export";
 
 	@Override
-	protected void login(DefaultHttpClient client) throws ContactListImporterException, IOException, URISyntaxException,
+	protected void login(WebClient client) throws ContactListImporterException, IOException, URISyntaxException,
 			InterruptedException, HttpException {
 
 		NameValuePair[] data = {
@@ -90,10 +90,10 @@ public class YahooImporter extends ContactListImporterImpl {
 			"YAHOO_LOGIN",
 			"T"+time+"/"+(time-16)+"/"+time
 		);
-		client.getCookieStore().addCookie(cookie);
+		client.getHttpClient().getCookieStore().addCookie(cookie);
 
 		String content=this.readInputStream(
-			this.doPost(client, this.getLoginURL(), data, "")
+			client.doPost(this.getLoginURL(), data, "")
 		);
 		if(content.contains("Invalid ID or password")) {
 			throw new AuthenticationException("Username and password do not match");
@@ -112,7 +112,7 @@ public class YahooImporter extends ContactListImporterImpl {
 		// first, get the addressbook site with the new crumb parameter
 		data = new NameValuePair[0];
 		content=this.readInputStream(
-				this.doPost(client, ADDRESS_BOOK_URL, data, "")
+				client.doPost(ADDRESS_BOOK_URL, data, "")
 			);
 
 		String subSearch = "id=\"crumb2\" value=\"";
