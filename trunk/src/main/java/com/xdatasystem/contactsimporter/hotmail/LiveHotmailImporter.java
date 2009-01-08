@@ -12,7 +12,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.message.BasicNameValuePair;
 import com.xdatasystem.contactsimporter.ContactListImporterException;
-import com.xdatasystem.contactsimporter.MemorizingRedirectHandler;
 import com.xdatasystem.contactsimporter.WebClient;
 
 /**
